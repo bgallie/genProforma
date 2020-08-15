@@ -98,17 +98,17 @@ func init() {
 	} else {
 		// Seed the uberJc1 function with the given secret.
 		key = jc1.NewUberJc1([]byte(secret))
-		// Seed the math.Rand function iwht an integer generated from uberJc1
+		// Seed the math.Rand function with an integer generated from uberJc1
 		// and define rRead and rInt to use the math/rand based fucntions.
 		mRand.Seed(key.Int64())
 		rRead = mRand.Read
 		rInt = mRand.Int63n
 	}
 
-	// rotoSizes is an array of possible rotor sizes.  It consists of prime
-	// numbers less than 2048 to allow for 256 bit splce at the end of the rotor.
-	// The rotor sizes selected from this list will maximizes the number of
-	// unique states the rotors can take.
+	// rotoSizes is an array of possible rotor sizes that will be less then 2048
+	// bits.  It consists of prime numbers less than 1792 to allow for 256 bit
+	// splce at the end of the rotor.  The rotor sizes selected from this list
+	// will maximizes the number of unique states the rotors can take.
 	rotorSizes = []int{
 		1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733,
 		1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789}
