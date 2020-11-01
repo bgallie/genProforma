@@ -104,10 +104,11 @@ func init() {
 		rInt = mRand.Int63n
 	}
 
-	// rotoSizes is an array of possible rotor sizes that will be less then 2048
-	// bits.  It consists of prime numbers less than 1792 to allow for 256 bit
-	// splce at the end of the rotor.  The rotor sizes selected from this list
-	// will maximizes the number of unique states the rotors can take.
+	// rotoSizes is an array of possible rotor sizes.  It consists of prime
+	// numbers less than 1792 to allow for a 256 bit splce at the end of the
+	// rotor and still be less then or equal to 2048 bits (32 bytes).  The rotor
+	// sizes selected from this list will maximizes the number of unique states
+	// the rotors can take.
 	rotorSizes = []int{
 		1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733,
 		1741, 1747, 1753, 1759, 1777, 1783, 1787, 1789}
