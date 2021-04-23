@@ -14,20 +14,17 @@ import (
 	"flag"
 	"fmt"
 	"math/big"
-	mRand "math/rand"
 	"os"
 	"strings"
 
 	"github.com/bgallie/jc1"
-	"github.com/bgallie/tnt2/cryptors"
-	"github.com/bgallie/tnt2/cryptors/bitops"
-	"github.com/bgallie/tnt2/cryptors/permutator"
-	"github.com/bgallie/tnt2/cryptors/rotor"
+	"github.com/bgallie/tntEngine"
 	"github.com/bgallie/utilities"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
+	tntMachine      tntEngine.TntEngine
 	rotorSizes      []int
 	rotorSizesIndex int
 	cycleSizes      []int
@@ -35,18 +32,16 @@ var (
 	rRead           func([]byte) (n int, err error)
 	rInt            func(int64) int64
 	outputFileName  string
-	rotor1          = new(rotor.Rotor)
-	rotor2          = new(rotor.Rotor)
-	rotor3          = new(rotor.Rotor)
-	rotor4          = new(rotor.Rotor)
-	rotor5          = new(rotor.Rotor)
-	rotor6          = new(rotor.Rotor)
-	permutator1     = new(permutator.Permutator)
-	permutator2     = new(permutator.Permutator)
-	proFormaMachine = []cryptors.Crypter{rotor1, rotor2, permutator1, rotor3, rotor4, permutator2, rotor5, rotor6}
-	un              = utilities.Un
-	trace           = utilities.Trace
-	deferClose      = utilities.DeferClose
+	random          *tntEngine.Rand
+	rotor1          = new(tntEngine.Rotor)
+	rotor2          = new(tntEngine.Rotor)
+	rotor3          = new(tntEngine.Rotor)
+	rotor4          = new(tntEngine.Rotor)
+	rotor5          = new(tntEngine.Rotor)
+	rotor6          = new(tntEngine.Rotor)
+	permutator1     = new(tntEngine.Permutator)
+	permutator2     = new(tntEngine.Permutator)
+	proFormaMachine = []tntEngine.Crypter{rotor1, rotor2, permutator1, rotor3, rotor4, permutator2, rotor5, rotor6}
 	checkFatal      = utilities.CheckFatal
 	turnOffLogging  = utilities.TurnOffLogging
 	turnOnLogging   = utilities.TurnOnLogging
@@ -57,13 +52,16 @@ var (
 )
 
 func init() {
-	var secret string
-	var exists bool
-
 	flag.StringVar(&outputFileName, "outputFile", "", "output file name")
 	flag.StringVar(&outputFileName, "of", "", "output file name (shorthand)")
 	flag.Parse()
 
+	// Obtain the passphrase used to encrypt the file from either:
+	// 1. User input from the terminal
+	// 2. The 'tnt2Secret' environment variable
+	// 3. Arguments from the entered command line
+	var secret string
+	var exists bool
 	if flag.NArg() == 0 {
 		secret, exists = os.LookupEnv("tnt2Secret")
 		if !exists {
@@ -95,13 +93,14 @@ func init() {
 		rRead = cRand.Read
 		rInt = cInt
 	} else {
-		// Seed the uberJc1 function with the given secret.
-		key = jc1.NewUberJc1([]byte(secret))
-		// Seed the math.Rand function iwht an integer generated from uberJc1
-		// and define rRead and rInt to use the math/rand based fucntions.
-		mRand.Seed(key.Int64())
-		rRead = mRand.Read
-		rInt = mRand.Int63n
+		tntMachine.Init([]byte(secret), "")
+		tntMachine.SetEngineType("E")
+		// Now the the engine type is set, build the cipher machine.
+		tntMachine.BuildCipherMachine()
+		// Get the random functions
+		random = tntEngine.NewRand(&tntMachine)
+		rRead = random.Read
+		rInt = random.Int63n
 	}
 
 	// rotoSizes is an array of possible rotor sizes.  It consists of prime
@@ -115,7 +114,6 @@ func init() {
 
 	// Define a random order of rotor sizes based on the key.
 	rotorSizesPerm := perm(len(rotorSizes))
-
 	for i, val := range rotorSizesPerm {
 		rotorSizesPerm[i] = rotorSizes[val]
 	}
@@ -123,7 +121,7 @@ func init() {
 	rotorSizes = rotorSizesPerm
 
 	// Define a random order of cycle sizes based on the key.
-	cycleSizes = perm(len(cryptors.CycleSizes))
+	cycleSizes = perm(len(tntEngine.CycleSizes))
 }
 
 func cInt(n int64) int64 {
@@ -163,23 +161,24 @@ func randP() []byte {
 	return res
 }
 
-func updateRotor(r *rotor.Rotor) {
+func updateRotor(r *tntEngine.Rotor) {
 	r.Size = rotorSizes[rCnt]
 	r.Start = int(rInt(int64(r.Size)))
 	r.Current = r.Start
 	r.Step = int(rInt(int64(r.Size)))
-	size := (r.Size/8 + 1)
-	r.Rotor = make([]byte, size+32, size+32)
-	size, err := rRead(r.Rotor)
+	// blkCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
+	blkCnt := ((r.Size + tntEngine.CypherBlockSize + 7) / 8)
+	r.Rotor = make([]byte, blkCnt, blkCnt)
+	_, err := rRead(r.Rotor)
 	checkFatal(err)
 
 	//Slice the first 256 bits of the rotor to the end of the rotor
 	var j = r.Size
 	for i := 0; i < 256; i++ {
-		if bitops.GetBit(r.Rotor, uint(i)) {
-			bitops.SetBit(r.Rotor, uint(j))
+		if tntEngine.GetBit(r.Rotor, uint(i)) {
+			tntEngine.SetBit(r.Rotor, uint(j))
 		} else {
-			bitops.ClrBit(r.Rotor, uint(j))
+			tntEngine.ClrBit(r.Rotor, uint(j))
 		}
 		j++
 	}
@@ -187,12 +186,12 @@ func updateRotor(r *rotor.Rotor) {
 	rCnt++
 }
 
-func updatePermutator(p *permutator.Permutator) {
+func updatePermutator(p *tntEngine.Permutator) {
 	p.Randp = randP()
-	p.Cycles = make([]permutator.Cycle, cryptors.NumberPermutationCycles)
+	p.Cycles = make([]tntEngine.Cycle, tntEngine.NumberPermutationCycles)
 
 	for i := range p.Cycles {
-		p.Cycles[i].Length = cryptors.CycleSizes[cycleSizes[pCnt]][i]
+		p.Cycles[i].Length = tntEngine.CycleSizes[cycleSizes[pCnt]][i]
 		p.Cycles[i].Current = 0
 		// Adjust the start to reflect the lenght of the previous cycles
 		if i == 0 { // no previous cycle so start at 0
@@ -219,12 +218,12 @@ func main() {
 		switch v := machine.(type) {
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
-		case *rotor.Rotor:
-			updateRotor(machine.(*rotor.Rotor))
-		case *permutator.Permutator:
-			updatePermutator(machine.(*permutator.Permutator))
-		case *cryptors.Counter:
-			machine.(*cryptors.Counter).SetIndex(big.NewInt(0))
+		case *tntEngine.Rotor:
+			updateRotor(machine.(*tntEngine.Rotor))
+		case *tntEngine.Permutator:
+			updatePermutator(machine.(*tntEngine.Permutator))
+		case *tntEngine.Counter:
+			machine.(*tntEngine.Counter).SetIndex(big.NewInt(0))
 		}
 	}
 
@@ -233,7 +232,7 @@ func main() {
 		checkFatal(err)
 	}
 
-	defer deferClose("", outputFile.Close)
+	defer outputFile.Close()
 	jEncoder := json.NewEncoder(outputFile)
 	jEncoder.SetEscapeHTML(false)
 
@@ -241,11 +240,11 @@ func main() {
 		switch v := machine.(type) {
 		default:
 			fmt.Fprintf(os.Stderr, "Unknown machine: %v\n", v)
-		case *rotor.Rotor:
-			err = jEncoder.Encode(machine.(*rotor.Rotor))
+		case *tntEngine.Rotor:
+			err = jEncoder.Encode(machine.(*tntEngine.Rotor))
 			checkFatal(err)
-		case *permutator.Permutator:
-			err = jEncoder.Encode(machine.(*permutator.Permutator))
+		case *tntEngine.Permutator:
+			err = jEncoder.Encode(machine.(*tntEngine.Permutator))
 			checkFatal(err)
 		}
 	}
