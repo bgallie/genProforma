@@ -1,5 +1,7 @@
 github.com/bgallie/jc1 v1.1.1 h1:lRzGB1TddAIcBMZzflASi+Dv10jfacRnIdI79XcLUsI=
 github.com/bgallie/jc1 v1.1.1/go.mod h1:DYi1LTKWFhce4XAKhvyDp6y4cFvRmoXWq0uaCSi59Rc=
+github.com/bgallie/tntEngine v1.0.1 h1:o3E4o1iExtXf8CoDmTcvjmebXwFqAeViCu+DX+XkUOQ=
+github.com/bgallie/tntEngine v1.0.1/go.mod h1:EKvNaD3gbNcq6v7ZxTht/gnwj0WiqjNfgPTA0zCvt0c=
 github.com/bgallie/utilities v0.0.0-20210329160024-3c1a80f89809 h1:PG/wolv+2xGS0vs+UnksZHq5Lfljew37C6qRbL5Jc84=
 github.com/bgallie/utilities v0.0.0-20210329160024-3c1a80f89809/go.mod h1:SpQZUFDxY5S5t3+rtPXbU3m5ohqqpzT8aPtyVoCzTfA=
 golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc h1:+q90ECDSAQirdykUN6sPEiBXBsp8Csjcca8Oy7bgLTA=
