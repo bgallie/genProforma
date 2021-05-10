@@ -1,11 +1,11 @@
 github.com/bgallie/jc1 v1.1.1 h1:lRzGB1TddAIcBMZzflASi+Dv10jfacRnIdI79XcLUsI=
 github.com/bgallie/jc1 v1.1.1/go.mod h1:DYi1LTKWFhce4XAKhvyDp6y4cFvRmoXWq0uaCSi59Rc=
-github.com/bgallie/tntEngine v1.0.1 h1:o3E4o1iExtXf8CoDmTcvjmebXwFqAeViCu+DX+XkUOQ=
-github.com/bgallie/tntEngine v1.0.1/go.mod h1:EKvNaD3gbNcq6v7ZxTht/gnwj0WiqjNfgPTA0zCvt0c=
+github.com/bgallie/tntengine v1.1.1 h1:QVpH6/5fY8Q3zvtR5/kBu3LjmIrIPvs4a4vMXF7kBNg=
+github.com/bgallie/tntengine v1.1.1/go.mod h1:MXp7Ol9UXi2kOKNoc5ZapgB8fgBhlveRLm9+KS1fpz8=
 github.com/bgallie/utilities v0.0.0-20210329160024-3c1a80f89809 h1:PG/wolv+2xGS0vs+UnksZHq5Lfljew37C6qRbL5Jc84=
 github.com/bgallie/utilities v0.0.0-20210329160024-3c1a80f89809/go.mod h1:SpQZUFDxY5S5t3+rtPXbU3m5ohqqpzT8aPtyVoCzTfA=
-golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc h1:+q90ECDSAQirdykUN6sPEiBXBsp8Csjcca8Oy7bgLTA=
-golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc/go.mod h1:T9bdIzuCu7OtxOm1hfPfRQxPLYneinmdGuTeoZ9dtd4=
+golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b h1:7mWr3k41Qtv8XlltBkDkl8LoP3mpSgBW8BUoxtEdbXg=
+golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b/go.mod h1:T9bdIzuCu7OtxOm1hfPfRQxPLYneinmdGuTeoZ9dtd4=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68 h1:nxC68pudNYkKU6jWhgrqdreuFiOQWj1Fs7T3VrH4Pjw=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
