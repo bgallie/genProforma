@@ -17,8 +17,20 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/bgallie/tntengine"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/term"
+)
+
+var (
+	tntMachine tntengine.TntEngine
+	random     *tntengine.Rand
+	rRead      func([]byte) (n int, err error)
+	rInt       func(int64) int64
 )
 
 // tntengineCmd represents the tntengine command
@@ -32,7 +44,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tntengine called")
+		initEngine(args)
+		cycleSizes = perm(len(tntengine.CycleSizes))
+		rotorSizesIndex = perm(len(rotorSizes))
+		generatRandomMachine()
 	},
 }
 
@@ -48,4 +63,43 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// tntengineCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func initEngine(args []string) {
+	// Obtain the passphrase used to encrypt the file from either:
+	// 1. User input from the terminal (most secure)
+	// 2. The 'TNT2_SECRET' environment variable (less secure)
+	// 3. Arguments from the entered command line (least secure - not recommended)
+	var secret string
+	if len(args) == 0 {
+		if viper.IsSet("TNT2_SECRET") {
+			secret = viper.GetString("TNT2_SECRET")
+		} else {
+			if term.IsTerminal(int(os.Stdin.Fd())) {
+				fmt.Fprintf(os.Stderr, "Enter the passphrase: ")
+				byteSecret, err := term.ReadPassword(int(os.Stdin.Fd()))
+				cobra.CheckErr(err)
+				fmt.Fprintln(os.Stderr, "")
+				secret = string(byteSecret)
+			}
+		}
+	} else {
+		secret = strings.Join(args, " ")
+	}
+
+	if len(secret) == 0 {
+		cobra.CheckErr("You must supply a password.")
+		// } else {
+		// 	fmt.Printf("Secret: [%s]\n", secret)
+	}
+
+	// Initialize the tntengine with the secret key and the named proforma file.
+	tntMachine.Init([]byte(secret), "")
+	tntMachine.SetEngineType("E")
+	// Now the the engine type is set, build the cipher machine.
+	tntMachine.BuildCipherMachine()
+	// Get the random functions
+	random = tntengine.NewRand(&tntMachine)
+	rRead = random.Read
+	rInt = random.Int63n
 }
