@@ -52,8 +52,12 @@ var (
 	rCnt            = 0
 	pCnt            = 0
 	outputFile      *os.File
-	Version         string = "information not available" // Set on build using -ldflags "-X github.com/bgallie/tnt2/cmd.Version=$(git tag -l | tail -1)
-	BuildDate       string = "date not available"        //							     -X github.com/bgallie/tnt2/cmd.BuildDate=$(date -Iminutes)"
+	GitCommit       string = "not set"
+	GitBranch       string = "not set"
+	GitState        string = "not set"
+	GitSummary      string = "not set"
+	BuildDate       string = "not set"
+	Version         string = "dev"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -63,6 +67,7 @@ var rootCmd = &cobra.Command{
 	Long: `genProfroma is a tool to generates a set of rotors and
 	permutators that can be used by tntengine to override the builtin
 	proforma rotors and permutators.`,
+	Version: Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -183,6 +188,8 @@ func updatePermutator(p *tntengine.Permutator) {
 
 func generatRandomMachine() {
 	var err error
+	cycleSizes = perm(len(tntengine.CycleSizes))
+	rotorSizesIndex = perm(len(rotorSizes))
 	// Update the rotors and permutators in a very non-linear fashion.
 	for _, machine := range proFormaMachine {
 		switch v := machine.(type) {

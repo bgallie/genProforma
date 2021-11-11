@@ -16,32 +16,29 @@ limitations under the License.
 package cmd
 
 import (
-	"crypto/rand"
-	"math/big"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-// randomCmd represents the random command
-var randomCmd = &cobra.Command{
-	Use:   "random",
-	Short: "Generate a new proforma machine",
-	Long:  `Generate a new proforma machine using Go's cryptographically secure random number generator.`,
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Display version information",
+	Long:  `Display version and detailed build information for genProforma.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		generatRandomMachine()
+		if Version == "" {
+			Version = "dev"
+		}
+		fmt.Println("   Version:", Version)
+		fmt.Println("    Branch:", GitBranch)
+		fmt.Println("    Commit:", GitCommit)
+		fmt.Println("     State:", GitState)
+		fmt.Println("   Summary:", GitSummary)
+		fmt.Println("Build Date:", BuildDate)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(randomCmd)
-	// Define rRead and rInt to use the crypto/rand based functions.
-	rRead = rand.Read
-	rInt = cInt
-}
-
-func cInt(n int64) int64 {
-	max := big.NewInt(n)
-	j, err := rand.Int(rand.Reader, max)
-	cobra.CheckErr(err)
-	return j.Int64()
+	rootCmd.AddCommand(versionCmd)
 }
