@@ -36,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(randomCmd)
 	// Define rRead and rInt to use the crypto/rand based functions.
 	rRead = rand.Read
+	rPerm = perm
 	rInt = cInt
 }
 

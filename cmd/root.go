@@ -58,15 +58,18 @@ var (
 	GitSummary      string = "not set"
 	BuildDate       string = "not set"
 	Version         string = "dev"
+	rRead           func([]byte) (n int, err error)
+	rPerm           func(int) []int
+	rInt            func(int64) int64
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "genProforma",
 	Short: "Generate proforma rotors and permutators.",
-	Long: `genProfroma is a tool to generates a set of rotors and
-	permutators that can be used by tntengine to override the builtin
-	proforma rotors and permutators.`,
+	Long: `genProfroma is a tool to generates a set of rotors and permutators that 
+	can be used by tntengine to override the builtin proforma rotors
+	and permutators.`,
 	Version: Version,
 }
 
@@ -122,67 +125,31 @@ func perm(n int) []int {
 }
 
 func randP() []byte {
-	res := make([]byte, 256)
+	res := make([]byte, tntengine.CypherBlockSize)
 
-	for i := range res {
-		res[i] = byte(i)
-	}
-
-	for i := (256 - 1); i > 0; i-- {
-		j := int(rInt(int64(i)))
-		res[i], res[j] = res[j], res[i]
+	// Create a table of byte values [0...255] in a random order
+	for i, val := range rPerm(tntengine.CypherBlockSize) {
+		res[i] = byte(val)
 	}
 
 	return res
 }
 
 func updateRotor(r *tntengine.Rotor) {
-	r.Size = rotorSizes[rotorSizesIndex[rCnt]]
-	r.Start = int(rInt(int64(r.Size)))
-	r.Current = r.Start
-	r.Step = int(rInt(int64(r.Size)))
+	size := rotorSizes[rotorSizesIndex[rCnt]]
+	start := int(rInt(int64(size)))
+	step := int(rInt(int64(size-1))) + 1
 	// blkCnt is the total number of bytes needed to hold rotorSize bits + a slice of 256 bits
-	blkCnt := ((r.Size + tntengine.CypherBlockSize + 7) / 8)
-	r.Rotor = make([]byte, blkCnt)
-	_, err := rRead(r.Rotor)
+	blkCnt := ((size + tntengine.CypherBlockSize + 7) / 8)
+	rotor := make([]byte, blkCnt)
+	_, err := rRead(rotor)
 	cobra.CheckErr(err)
-
-	//Slice the first 256 bits of the rotor to the end of the rotor
-	var j = r.Size
-	for i := 0; i < 256; i++ {
-		if tntengine.GetBit(r.Rotor, uint(i)) {
-			tntengine.SetBit(r.Rotor, uint(j))
-		} else {
-			tntengine.ClrBit(r.Rotor, uint(j))
-		}
-		j++
-	}
-
+	r.New(size, start, step, rotor)
 	rCnt++
 }
 
 func updatePermutator(p *tntengine.Permutator) {
-	p.Randp = randP()
-	p.Cycles = make([]tntengine.Cycle, tntengine.NumberPermutationCycles)
-
-	for i := range p.Cycles {
-		p.Cycles[i].Length = tntengine.CycleSizes[cycleSizes[pCnt]][i]
-		p.Cycles[i].Current = 0
-		// Adjust the start to reflect the lenght of the previous cycles
-		if i == 0 { // no previous cycle so start at 0
-			p.Cycles[i].Start = 0
-		} else {
-			p.Cycles[i].Start = p.Cycles[i-1].Start + p.Cycles[i-1].Length
-		}
-	}
-
-	p.CurrentState = 0
-	p.MaximalStates = p.Cycles[0].Length
-
-	for i := 1; i < len(p.Cycles); i++ {
-		p.MaximalStates *= p.Cycles[i].Length
-	}
-
+	p.New(tntengine.CycleSizes[cycleSizes[pCnt]][:], randP())
 	pCnt++
 }
 

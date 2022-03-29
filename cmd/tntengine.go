@@ -29,8 +29,6 @@ import (
 var (
 	tntMachine tntengine.TntEngine
 	random     *tntengine.Rand
-	rRead      func([]byte) (n int, err error)
-	rInt       func(int64) int64
 )
 
 // tntengineCmd represents the tntengine command
@@ -82,7 +80,8 @@ func initEngine(args []string) {
 	// Now the the engine type is set, build the cipher machine.
 	tntMachine.BuildCipherMachine()
 	// Get the random functions
-	random = tntengine.NewRand(&tntMachine)
+	random = new(tntengine.Rand).New(&tntMachine)
 	rRead = random.Read
+	rPerm = random.Perm
 	rInt = random.Int63n
 }
