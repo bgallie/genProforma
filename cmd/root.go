@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/bgallie/tntengine"
 	"github.com/spf13/cobra"
@@ -57,7 +58,7 @@ var (
 	GitState        string = "not set"
 	GitSummary      string = "not set"
 	BuildDate       string = "not set"
-	Version         string = "dev"
+	Version         string = ""
 	rRead           func([]byte) (n int, err error)
 	rPerm           func(int) []int
 	rInt            func(int64) int64
@@ -76,6 +77,14 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	if GitSummary != "not set" {
+		idx := strings.Index(GitSummary, "-")
+		Version = GitSummary
+		if idx >= 0 {
+			Version = GitSummary[0:idx]
+		}
+		rootCmd.Version = Version
+	}
 	cobra.CheckErr(rootCmd.Execute())
 }
 
