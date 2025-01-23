@@ -28,7 +28,11 @@ var randomCmd = &cobra.Command{
 	Short: "Generate a new proforma machine",
 	Long:  `Generate a new proforma machine using Go's cryptographically secure random number generator.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !rootCmd.Flags().Changed("outputType") {
+		if rootCmd.Flags().Changed("outputType") {
+			if outputType != "json" && outputType != "ikm" {
+				cobra.CheckErr(outputType + " is not a valid output type.")
+			}
+		} else {
 			rootCmd.Flags().Set("outputType", "json")
 		}
 		generateProForma(outputType)

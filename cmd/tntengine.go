@@ -37,10 +37,14 @@ var tntengineCmd = &cobra.Command{
 	Short: "Generate a new proforma machine",
 	Long:  `Generate a new proforma machine using a psudo-random number generator (tntengine).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		initEngine(args)
-		if !rootCmd.Flags().Changed("outputType") {
+		if rootCmd.Flags().Changed("outputType") {
+			if outputType != "json" && outputType != "ikm" {
+				cobra.CheckErr(outputType + " is not a valid output type.")
+			}
+		} else {
 			rootCmd.Flags().Set("outputType", "json")
 		}
+		initEngine(args)
 		generateProForma(outputType)
 	},
 }
