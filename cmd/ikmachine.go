@@ -20,36 +20,36 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bgallie/tntengine"
+	"github.com/bgallie/ikmachine"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 )
 
 var (
-	tntMachine tntengine.TntEngine
-	random     *tntengine.Rand
+	ikengine *ikmachine.IkMachine
+	ikRandom *ikmachine.Rand
 )
 
 // tntengineCmd represents the tntengine command
-var tntengineCmd = &cobra.Command{
-	Use:   "tntengine",
+var ikmachineCmd = &cobra.Command{
+	Use:   "ikmachine",
 	Short: "Generate a new proforma machine",
-	Long:  `Generate a new proforma machine using a psudo-random number generator (tntengine).`,
+	Long:  `Generate a new proforma machine using a psudo-random number generator (ikmachine).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		initEngine(args)
 		if !rootCmd.Flags().Changed("outputType") {
-			rootCmd.Flags().Set("outputType", "json")
+			rootCmd.Flags().Set("outputType", "ikm")
 		}
+		initEngine(args)
 		generateProForma(outputType)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(tntengineCmd)
+	rootCmd.AddCommand(ikmachineCmd)
 }
 
-func initEngine(args []string) {
+func initIkEngine(args []string) {
 	// Obtain the passphrase used to encrypt the file from either:
 	// 1. User input from the terminal (most secure)
 	// 2. The 'TNT2_SECRET' environment variable (less secure)
@@ -77,14 +77,11 @@ func initEngine(args []string) {
 		// 	fmt.Printf("Secret: [%s]\n", secret)
 	}
 
-	// Initialize the tntengine with the secret key and the named proforma file.
-	tntMachine.Init([]byte(secret))
-	tntMachine.SetEngineType("E")
-	// Now the the engine type is set, build the cipher machine.
-	tntMachine.BuildCipherMachine()
+	// Initialize the ikmachine with the secret key and the named proforma file.
+	ikengine = new(ikmachine.IkMachine).InitializeProformaEngine().ApplyKey('E', []byte(secret))
 	// Get the random functions
-	random = new(tntengine.Rand).New(&tntMachine)
-	rRead = random.Read
-	rPerm = random.Perm
-	rInt = random.Int63n
+	ikRandom = new(ikmachine.Rand).New(ikengine)
+	rRead = ikRandom.Read
+	rPerm = ikRandom.Perm
+	rInt = ikRandom.Int63n
 }
